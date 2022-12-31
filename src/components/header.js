@@ -1,23 +1,47 @@
-import * as React from "react"
+import React, { useState, useEffect } from "react"
 import { Link } from "gatsby"
 import styled from "styled-components"
 import { menuData } from "../data/menuData"
 import MenuButton from "./buttons/MenuButton"
 import MenuTooltip from "./tooltips/MenuTooltip"
+import { useRef } from "react"
 
 function Header() {
-  const [isOpen, setIsOpen] = React.useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+  const ref = useRef()
+  const tooltipRef = useRef()
+
   function handleClick(event) {
     setIsOpen(!isOpen)
     event.preventDefault()
   }
+
+  function handleClickOutside(event) {
+    if (
+      ref.current &&
+      !ref.current.contains(event.target) &&
+      !tooltipRef.current.contains(event.target)
+    ) {
+      console.log("clicked outside")
+      setIsOpen(false)
+    }
+  }
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside)
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
+
   return (
     <>
       <Wrapper>
         <Link to="/">
           <img src="/images/logos/logo.svg" alt="logo" />
         </Link>
-        <MenuWrapper count={menuData.length}>
+        <MenuWrapper count={menuData.length} ref={ref}>
           {menuData.map((item, index) =>
             item.link === "/account" ? (
               <MenuButton
@@ -40,7 +64,9 @@ function Header() {
             />
           </HamburgerWrapper>
         </MenuWrapper>
-        <MenuTooltip isOpen={isOpen} />
+        <div ref={tooltipRef}>
+          <MenuTooltip isOpen={isOpen} />
+        </div>
       </Wrapper>
     </>
   )
